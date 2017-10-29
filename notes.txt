@@ -1,0 +1,8 @@
+
+** To tar this project do the following.
+
+- Cd into the top youmacro directory.
+cd ~/src/youmacro
+
+- Now tar everything except certain directories.
+tar --exclude='./.buildozer' --exclude='./bin' -czvf ../youmacro.tgz .

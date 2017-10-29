@@ -1,0 +1,29 @@
+#:import Factory kivy.factory.Factory
+
+<UrlPopup@Popup>:
+    title: 'enter url'
+    Label:
+        text: 'content'
+
+BoxLayout:
+    orientation: 'vertical'
+    BoxLayout:
+        id: navbar_layout
+        orientation: 'horizontal'
+        size_hint: 1, 0.075
+        TextInput:
+            id: address_bar
+            size_hint: 0.8, 0.8
+            multiline: False
+            text: 'hello'
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        Button:
+            id: download_button
+            size_hint: 0.1, 1
+            text: 'V'
+            on_press: Factory.UrlPopup().open()
+    BoxLayout:
+        id: web_view_placeholder
+        size_hint: 1, 0.9
+
+

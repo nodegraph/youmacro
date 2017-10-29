@@ -1,0 +1,14 @@
+
+# python artifacts
+__pycache__/
+*.pyc
+
+# pycharm artifacts
+.idea/
+
+# build artifacts
+/.buildozer/
+/bin/
+
+# sphinx artifacts
+/sphinx/build/
