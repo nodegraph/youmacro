@@ -2,6 +2,7 @@ package com.youmacro.javawebview;
 
 import android.graphics.Bitmap;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -44,6 +45,15 @@ public class ForwardingWebViewClient extends WebViewClient{
   public void onReceivedError(WebView view, int errorCode, String description, String failingUrl){
     this._listener.onReceivedError(view, errorCode, description, failingUrl);
   }
+
+  @Override
+  public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event){
+    if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+        this._listener.onBackButton(view);
+        return true;
+    }
+    return true;
+   }
 
 } 
 

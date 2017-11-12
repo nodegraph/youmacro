@@ -4,7 +4,7 @@
 title = YouMacro 
 
 # (str) Package name
-package.name = youmacro 
+package.name = browser
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = com.youmacro
@@ -56,6 +56,7 @@ orientation = all
 
 # (list) List of service to declare
 #services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY
+services = Downloader:./service/main.py
 
 #
 # OSX Specific

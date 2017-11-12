@@ -48,3 +48,7 @@ class JavaListener(PythonJavaClass):
     def onReceivedError(self, view, errorCode, description, failingUrl):
         self._python_listener.dispatch_event('on_received_error', webview=view, error_code=errorCode,
                                              description=description, failing_url=failingUrl)
+
+    @java_method('(Landroid/webkit/WebView;)V')
+    def onBackButton(self, view):
+        self._python_listener.dispatch_event('on_back_button', webview=view)

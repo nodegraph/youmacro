@@ -4,6 +4,7 @@ from kivy.core.window import Window
 
 from kivy.clock import Clock
 from kivy.event import EventDispatcher
+from kivy.uix.actionbar import ActionView, ActionBar, ActionButton
 from kivy.uix.widget import Widget
 
 from android.runnable import run_on_ui_thread
@@ -22,14 +23,14 @@ activity = autoclass('org.kivy.android.PythonActivity').mActivity
 class WebViewWrapper(Widget, EventDispatcher):
 
     _events = ['on_should_override_url_loading', 'on_page_started', 'on_page_finished', 'on_received_error',
-               'on_page_commit_visible']
+               'on_page_commit_visible', 'on_back_button']
 
-    def __init__(self, navbar_layout):
+    def __init__(self, action_bar):
         """The Web View Wrapper is a Kivy Widget, which creates and manages a native android web view.
         The methods from the native android web view are exposed on this class. The calls are passed
         to the native android view. The actual native web view is constructed later on the ui thread.
         """
-        self.navbar_layout = navbar_layout
+        self.action_bar = action_bar
         self._web_view = None
 
         # Register the events we're interested in.
@@ -62,6 +63,8 @@ class WebViewWrapper(Widget, EventDispatcher):
             raise Exception("WebViewWrapper::%s was not defined." % method_name)
 
     def on_size(self, *args):
+        """Called when the screen orientation changes."""
+        # Layout the web view on the ui thread.
         self.layout_web_view()
 
     @run_on_ui_thread
@@ -71,11 +74,11 @@ class WebViewWrapper(Widget, EventDispatcher):
 
         # Set the top left corner.
         self._web_view.setX(0)
-        self._web_view.setY(self.navbar_layout.height)
+        self._web_view.setY(Window.height * 0.08) #(self.action_bar.height)
 
         # Set the layout params.
         lp = self._web_view.getLayoutParams()
-        lp.height = Window.height - self.navbar_layout.height
+        lp.height = Window.height * 0.92
         lp.width = Window.width
 
         # Request another layout run.
@@ -107,13 +110,21 @@ class WebViewWrapper(Widget, EventDispatcher):
 
         # Set the top left corner.
         self._web_view.setX(0)
-        self._web_view.setY(self.navbar_layout.height)
+        self._web_view.setY(Window.height * 0.08)
 
         # Add the web view to our view.
-        height = Window.height - self.navbar_layout.height
+        height = Window.height * 0.92
         width = Window.width
         activity.addContentView(self._web_view, LayoutParams(width, height))
         self._web_view.loadUrl('https://www.youtube.com')
+
+    @run_on_ui_thread
+    def destroy_web_view(self):
+        if self._web_view:
+            self._web_view.clearHistory()
+            self._web_view.clearCache(True)
+            self._web_view.loadUrl("about:blank")
+            self._web_view = None
 
     @run_on_ui_thread
     def hide_web_view(self):
@@ -121,3 +132,10 @@ class WebViewWrapper(Widget, EventDispatcher):
         if self._web_view is None:
             return False
         self._web_view.setVisibility(View.GONE)
+
+    @run_on_ui_thread
+    def show_web_view(self):
+        """Show the web view."""
+        if self._web_view is None:
+            return False
+        self._web_view.setVisibility(View.VISIBLE)

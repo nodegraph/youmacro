@@ -16,5 +16,7 @@ public interface WebViewEventsListenerInterface{
     public void onPageCommitVisible(WebView view, String url);
 
     public void onReceivedError(WebView view,  int errorCode, String description, String failingUrl);
+
+    public void onBackButton(WebView view);
 }
 

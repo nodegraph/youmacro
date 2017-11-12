@@ -1,180 +1,109 @@
-from __future__ import unicode_literals
-import youtube_dl
-
 import kivy
-
 kivy.require('1.10.0')
-
 from kivy.app import App
-from kivy.core.window import Window
-from kivy.lang import Builder
-from kivy.utils import platform
-
-from kivy.uix.widget import Widget
-from kivy.uix.label import Label
-from kivy.uix.button import Button
-from kivy.uix.boxlayout import BoxLayout
-
+from kivy.base import EventLoop
 from kivy.clock import Clock, mainthread
-from android.runnable import run_on_ui_thread
+from kivy.config import Config
+from kivy.lib import osc
+from kivy.uix.actionbar import ActionButton
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.textinput import TextInput
 
+from android.runnable import run_on_ui_thread
 from jnius import autoclass
 
-import os
-
 from pythonwebview.webviewwrapper import WebViewWrapper
+from service.androidwrap import AndroidWrap
+from service.ydlwrap import YdlWrap
 
-# .webviewwrapper import WebViewWrapper
 
 WebView = autoclass('android.webkit.WebView')
 WebViewClient = autoclass('android.webkit.WebViewClient')
+Intent = autoclass('android.content.Intent')
 activity = autoclass('org.kivy.android.PythonActivity').mActivity
 
+#Config.set('kivy', 'window_icon', 'logo.png')
+Config.set('kivy', 'exit_on_escape', 0)
+Config.set('kivy', 'pause_on_minimize', 0)
 
-# class WebViewWrap(Widget):
-#    def __init__(self, **kwargs):                                                               
-#        super(WebViewWrap, self).__init__(**kwargs)                                                      
-#        Clock.schedule_once(self.create_webview, 0)                                             
-#                                                                                                
-#    @run_on_ui_thread                                                                           
-#    def create_webview(self, *args):                                                            
-#        webview = WebView(activity)                                                             
-#        webview.getSettings().setJavaScriptEnabled(True)                                        
-#        wvc = WebViewClient();                                                                  
-#        webview.setWebViewClient(wvc);                                                          
-#        activity.setContentView(webview)                                                        
-#        webview.loadUrl('https://www.youtube.com')
-#
-# class Wv(Widget):
-#    def __init__(self, **kwargs):
-#        super(Wv, self).__init__(**kwargs)
-#        Clock.schedule_once(self.create_webview, 0)
-#
-#    @run_on_ui_thread
-#    def create_webview(self, *args):
-#        webview = WebView(activity)
-#        settings = webview.getSettings()
-#        settings.setJavaScriptEnabled(True)
-#        settings.setUseWideViewPort(True) # enables viewport html meta tags
-#        settings.setLoadWithOverviewMode(True) # uses viewport
-#
-#        settings.setSupportZoom(True) # enables zoom
-#        settings.setBuiltInZoomControls(True) # enables zoom controls
-#        settings.setDisplayZoomControls(False)
-#
-#        settings.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY)
-#        settings.setScrollbarFadingEnabled(False)
-#
-#        #settings.setUserAgentString("\"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.63 Safari/537.31");
-#  #webview.setDesktopMode(True)
-#
-#
-#        wvc = WebViewClient()
-#        webview.setWebViewClient(wvc)
-#        activity.setContentView(webview)
-#        webview.loadUrl('https://www.youtube.com')
-
-class MyLogger(object):
-    def debug(self, msg):
-        pass
-
-    def warning(self, msg):
-        pass
-
-    def error(self, msg):
-        print(msg)
+service_port = 7186
 
 
-class YdlWrap(object):
-    @staticmethod
-    def get_default_opts(download_dir):
-        return {
-            'outtmpl': download_dir + '/%(title)s-%(id)s.%(ext)s',
-            'format': 'best',
-            'logger': MyLogger(),
-            'progress_hooks': [YdlWrap.on_progress],
-        }
-
-    @staticmethod
-    def on_progress(info):
-        if info['status'] == 'finished':
-            print('Done downloading, now converting ...')
-            print('on_progress: self: <%s> obj: <%s>' % (self, str(info)))
-
-    @staticmethod
-    def download(urls, download_dir):
-        with youtube_dl.YoutubeDL(YdlWrap.get_default_opts(download_dir)) as ydl:
-            ydl.download(urls)
-
-    @staticmethod
-    def extract_url(page_url):
-        with youtube_dl.YoutubeDL(YdlWrap.get_default_opts("")) as ydl:
-            info = ydl.extract_info(page_url, download=False)
-            print('EEEEEE: ' + str(info))
-            return info['url']
+class MainScreen(Screen):
+    def __init__(self, **kwargs):
+        super(MainScreen, self).__init__(**kwargs)
 
 
-class AndroidWrap(object):
-    @staticmethod
-    def get_download_dir():
-        if platform == 'android':
-            Environment = autoclass('android.os.Environment')
-            if Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED:
-                return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
-        root = os.path.join(os.sep, os.getcwd(), 'Download')
+class RootWidget(BoxLayout):
+    def __init__(self, **kwargs):
+        super(RootWidget, self).__init__(**kwargs)
 
-    @staticmethod
-    def get_download_dir_old():
-        if platform == 'android':
-            dir = os.getenv('EXTERNAL_STORAGE') or os.path.expanduser('~')
-            dir = os.path.join(os.sep, dir, 'Download')
-            # dir = os.path.join(os.sep, dir, 'youmacro')
-            if not os.path.exists(dir):
-                os.makedirs(dir)
-            return dir
-        return 'XXXX'
 
-    @staticmethod
-    def download(url, filename):
-        if platform == 'android':
-            Environment = autoclass('android.os.Environment')
-            PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            Context = autoclass('android.content.Context')
-            Sensor = autoclass('android.hardware.Sensor')
-            DownloadManager = autoclass('android.app.DownloadManager')
-            Request = autoclass('android.app.DownloadManager$Request')
-            Uri = autoclass('android.net.Uri')
-
-            # Get our activity.
-            activity = PythonActivity.mActivity
-
-            # Create a request.
-            uri = Uri.parse(url)
-            request = Request(uri)
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
-            request.setNotificationVisibility(Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            request.allowScanningByMediaScanner()
-
-            # Send the request.
-            download_manager = activity.getSystemService(Context.DOWNLOAD_SERVICE)
-            download_manager.enqueue(request)
+class SearchBar(TextInput, ActionButton):
+    """This is an invisible tiny search bar.
+    It's purpose is to make sure the ActionBar draws properly after orientation changes.
+    Kivy seems to have a but where it doesn't without this."""
+    def __init__(self, *args, **kwargs):
+        super(SearchBar, self).__init__(*args, **kwargs)
+        self.hint_text=''
+        # self.background_color = [0, 0, 0, 1]
 
 
 class YouMacroApp(App):
     def __init__(self, **kwargs):
         super(YouMacroApp, self).__init__(**kwargs)
-        self.download_dir = AndroidWrap.get_download_dir()
         Clock.schedule_once(self._on_init_complete)
 
+    def on_start(self):
+        # Bind some event handlers.
+        EventLoop.window.bind(on_key_down=self.handle_key_down)
+        return True
+
     def on_pause(self):
+        # Note the pause logic partially kills the Kivy app.
+        # So we procedurally press the home button to send the app to the background,
+        # before we get here. We only get here when the native WebView has focus.
+        # Otherwise we can catch the back button in the normal key down handler.
+        # if platform == 'android':
+        #     # move activity to back
+        #     activity.moveTaskToBack(True)
         return True
 
     def on_resume(self):
+        # These prints seem to make kivy refresh the ui properly when resuming,
+        # aftering pressing the back button to close down the download manager.
+        print('RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRr')
+        print('RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRr')
+        print('RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRr')
         pass
 
+    def some_api_callback(self, message, *args):
+        print("got a message! %s" % message)
+
+    @run_on_ui_thread
+    def start_service(self):
+        service = autoclass('{}.Service{}'.format('com.youmacro.browser', 'Downloader'))
+        argument = ''
+        service.start(activity, argument)
+
     def build(self):
-        # self.icon = 'winter_hat_512.png'
-        pass
+        # Set our icon.
+        #self.icon = 'logo.png'
+
+        # Start our background service.
+        self.start_service()
+        # Initialize osc for communicating with the background service.
+        # Note we only do one way communication from the main app to the service.
+        osc.init()
+        #oscid = osc.listen(ipAddr='127.0.0.1', port=3001)
+        #print('OOOOOOOOOOOOOOOOOOOOOOOO oscid is: %s' % oscid)
+        #osc.bind(oscid, self.some_api_callback, '/download_url_found')
+        #Clock.schedule_interval(lambda *x: osc.readQueue(oscid), 0)
+
+        # Build our gui.
+        self.load_kv('youmacro.kv')
+        return MainScreen()
 
     def _on_init_complete(self, *args):
         # Window.clearcolor = (0.1, 1, 0.1, 1)
@@ -183,22 +112,36 @@ class YouMacroApp(App):
         self.can_go_back = False
         self.can_go_forward = False
 
-        # Grab our layouts.
-        self.navbar_layout = self.root.ids.navbar_layout
-
-        # Grab our navbar elements.
-        self.address_bar = self.root.ids.address_bar
-        self.address_bar.bind(on_text_validate=self.request_url)
+        # Grab our action bar elements.
+        self.action_bar = self.root.ids.action_bar
 
         # Grab our toolbar buttons.
+        self.youmacro_button = self.root.ids.youmacro_button
+        self.youmacro_button.bind(on_press=self.on_youmacro_pressed)
+
+        self.search_button = self.root.ids.search_button
+        self.search_button.bind(on_press=self.on_search_pressed)
+
+        self.refresh_button = self.root.ids.refresh_button
+        self.refresh_button.bind(on_press=self.on_refresh_pressed)
+
+        self.back_button = self.root.ids.back_button
+        self.back_button.bind(on_press=self.on_back_pressed)
+
+        self.forward_button = self.root.ids.forward_button
+        self.forward_button.bind(on_press=self.on_forward_pressed)
+
         self.download_button = self.root.ids.download_button
-        self.download_button.bind(on_press=self.on_download)
+        self.download_button.bind(on_press=self.on_download_pressed)
+
+        self.play_button = self.root.ids.play_button
+        self.play_button.bind(on_press=self.on_play_pressed)
 
         # Grab our web view placeholder where we inject the real web view.
         self.web_view_placeholder = self.root.ids.web_view_placeholder
 
         # Create the webview.
-        self.wv_wrap = WebViewWrapper(self.navbar_layout)
+        self.wv_wrap = WebViewWrapper(self.action_bar)
 
         # Inject our webview into the placeholder.
         self.web_view_placeholder.add_widget(self.wv_wrap)
@@ -207,75 +150,118 @@ class YouMacroApp(App):
         self.wv_wrap.bind(on_page_started=self.on_page_started)
         self.wv_wrap.bind(on_page_finished=self.on_page_finished)
         self.wv_wrap.bind(on_should_override_url_loading=self.on_should_override_url_loading)
-        # self.web_view.bind(on_page_commit_visible=self.on_page_commit_visible)
+        self.wv_wrap.bind(on_back_button=self.on_back_button)
 
+    # ---------------------------------------------------------------------------
+    # Kivy Widget Event Handlers.
+    # ---------------------------------------------------------------------------
 
-    def request_url(self, pressed_obj):
-        self._request_url(pressed_obj.text)
+    def on_youmacro_pressed(self, pressed_obj):
+        self.perform_youmacro_action()
 
-    @run_on_ui_thread
-    def _request_url(self, url):
-        self.wv_wrap.loadUrl(url)
+    def on_search_pressed(self, pressed_obj):
+        self.perform_search_action()
 
-    @run_on_ui_thread
-    def update_url(self):
-        url = self.wv_wrap.getUrl()
-        self._update_url(url)
+    def on_refresh_pressed(self, pressed_obj):
+        self.perform_refresh_action()
 
-    @mainthread
-    def _update_url(self, url):
-        self._url = url
-        self.set_address_bar(url)
+    def on_back_pressed(self, pressed_obj):
+        self.perform_back_action()
 
-    def set_address_bar(self, url):
-        self.address_bar.text = url
+    def on_forward_pressed(self, pressed_obj):
+        self.perform_forward_action()
 
-    def on_download(self, pressed_obj):
-        Clock.schedule_once(lambda elapsed_time: self._download(), 0)
+    def on_download_pressed(self, pressed_obj):
+        self.perform_download_action()
 
-    @run_on_ui_thread
-    def _download(self):
-        page_url = self.wv_wrap.getUrl()
-
-        # Extract the download url.
-        url = YdlWrap.extract_url(page_url)
-        print('download_url: ' + url)
-
-        # Create a name for the downloaded file.
-        filename = os.path.join(os.sep, self.download_dir, 'test.mp4')
-
-        # Start the download.
-        AndroidWrap.download(url, filename)
+    def on_play_pressed(self, pressed_obj):
+        self.perform_play_action()
 
     @run_on_ui_thread
-    def go_back(self):
+    def perform_youmacro_action(self):
+        self.wv_wrap.loadUrl("https://www.youmacro.com")
+
+    @run_on_ui_thread
+    def perform_search_action(self):
+        self.wv_wrap.loadUrl("https://www.google.com")
+
+    @run_on_ui_thread
+    def perform_refresh_action(self):
+        self.wv_wrap.reload()
+
+    @run_on_ui_thread
+    def perform_back_action(self):
         """Go back a page."""
         if self.wv_wrap.canGoBack():
             self.wv_wrap.goBack()
 
     @run_on_ui_thread
-    def go_forward(self):
+    def perform_forward_action(self):
         """Go forward a page."""
         if self.wv_wrap.canGoForward:
             self.wv_wrap.goForward()
 
+    @run_on_ui_thread
+    def perform_download_action(self):
+        page_url = self.wv_wrap.getUrl()
+        osc.sendMsg('/extract_and_download', [page_url], port=service_port)
+
+    @staticmethod
+    def debug_download_action(page_url):
+        """This downloads on the main thread.
+        It's purpose is to help debug YDL, as we get a good stack trace on the main thread."""
+        url = YdlWrap.extract_url(page_url)
+        print('dddddddddddddddddddddddddddddddddddddddddddddddddddddddddd')
+        print('download_url: ' + url)
+        print('dddddddddddddddddddddddddddddddddddddddddddddddddddddddddd')
+
+    @run_on_ui_thread
+    def perform_play_action(self):
+        AndroidWrap.view_downloads()
+
+
+
+    # ---------------------------------------------------------------------------
+    # WebViewClient Event Handlers.
+    # ---------------------------------------------------------------------------
+
     def on_should_override_url_loading(self, *args, **kwargs):
         """Handle on should override url loading events."""
-        self.update_url()
+        pass
 
     def on_page_started(self, *args, **kwargs):
         """Handle on page started events."""
-        url = kwargs.get('url')
-        if url is not None:
-            self.set_address_bar(url)
+        pass
 
     def on_page_finished(self, *args, **kwargs):
         """Handle on page finished events."""
-        self.update_url()
+        pass
 
     def on_page_commit_visible(self, *args, **kwargs):
         """Handle on page commit visible events."""
-        self.update_url()
+        pass
+
+    @run_on_ui_thread
+    def on_back_button(self, *args, **kwargs):
+        # Procedurally press the home button to put this activity in the background.
+        # Otherwise Kivy's on_pause logic will partially kill the app,
+        # making it unusable with a black screen when resumed.
+        intent = Intent(Intent.ACTION_MAIN)
+        intent.addCategory(Intent.CATEGORY_HOME)
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        activity.startActivity(intent)
+
+    # ---------------------------------------------------------------------------
+    # EventLoop Event Handlers.
+    # ---------------------------------------------------------------------------
+
+    def handle_key_down(self, key, scancode, codepoint, modifier, other):
+        # We can detect back button presses here on app start/resume when the webview
+        # has not received focus yet. To avoid confusing the user we make sure to use
+        # the same logic as when the back button is pressed and webview has had focus.
+        if scancode == 27:
+            self.on_back_button()
+        return True
 
 
 if __name__ == '__main__':
