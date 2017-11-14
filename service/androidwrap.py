@@ -2,14 +2,24 @@ from kivy.utils import platform
 from jnius import autoclass
 import os
 
+Environment = autoclass('android.os.Environment')
+DownloadManager = autoclass('android.app.DownloadManager')
+Intent = autoclass('android.content.Intent')
+PythonActivity = autoclass('org.kivy.android.PythonActivity')
+activity = PythonActivity.mActivity
+service = autoclass('org.kivy.android.PythonService').mService
+
+Context = autoclass('android.content.Context')
+Request = autoclass('android.app.DownloadManager$Request')
+Uri = autoclass('android.net.Uri')
+
 class AndroidWrap(object):
     @staticmethod
     def get_download_dir():
         if platform == 'android':
-            Environment = autoclass('android.os.Environment')
             if Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED:
                 return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
-        root = os.path.join(os.sep, os.getcwd(), 'Download')
+        root = os.path.join(os.sep, os.getcwd(), 'YouMacroDownloads')
 
     @staticmethod
     def get_download_dir_old():
@@ -24,22 +34,16 @@ class AndroidWrap(object):
 
     @staticmethod
     def get_activity_or_service():
-        PythonActivity = autoclass('org.kivy.android.PythonActivity')
-        activity = PythonActivity.mActivity
         if not (activity is None):
             return activity
         else:
-            service = autoclass('org.kivy.android.PythonService').mService
             return service
 
 
     @staticmethod
     def download_from_service(url, filename):
         if platform == 'android':
-            Environment = autoclass('android.os.Environment')
-            Context = autoclass('android.content.Context')
-            Request = autoclass('android.app.DownloadManager$Request')
-            Uri = autoclass('android.net.Uri')
+
 
             # Create a request.
             uri = Uri.parse(url)
@@ -56,11 +60,18 @@ class AndroidWrap(object):
     @staticmethod
     def view_downloads():
         if platform == 'android':
-            DownloadManager = autoclass('android.app.DownloadManager')
-            Intent = autoclass('android.content.Intent')
-
             intent = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
+            # start activity
             caller = AndroidWrap.get_activity_or_service()
             caller.startActivity(intent)
+
+    @staticmethod
+    def view_downloads_by_favorite_app():
+        dir = AndroidWrap.get_download_dir()
+        intent = Intent(Intent.ACTION_VIEW)
+        uri = Uri.parse(dir)
+        intent.setDataAndType(uri, "*/*")
+        # start activity
+        caller = AndroidWrap.get_activity_or_service()
+        caller.startActivity(intent)

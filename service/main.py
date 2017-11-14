@@ -5,7 +5,7 @@ from service.ydlwrap import YdlWrap
 from service.androidwrap import AndroidWrap
 
 service_port = 7186
-
+#app_port = 6829
 
 def extract_and_download(message, *args):
     print("got a message! %s" % message)

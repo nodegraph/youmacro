@@ -98,10 +98,10 @@ class WebViewWrapper(Widget, EventDispatcher):
         # Setup the web view.
         settings = self._web_view.getSettings()
         settings.setJavaScriptEnabled(True)
-        settings.setUseWideViewPort(True)  # enables viewport html meta tags
-        settings.setLoadWithOverviewMode(True)  # uses viewport
-        settings.setSupportZoom(True)  # enables zoom
-        settings.setBuiltInZoomControls(True)  # enables zoom controls
+        #settings.setUseWideViewPort(True)  # enables viewport html meta tags
+        #settings.setLoadWithOverviewMode(True)  # uses viewport
+        #settings.setSupportZoom(True)  # enables zoom
+        #settings.setBuiltInZoomControls(True)  # enables zoom controls
 
         # Set the forwarding web view client.
         # This allows us to get events from the native web view.

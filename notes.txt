@@ -6,3 +6,22 @@ cd ~/src/youmacro
 
 - Now tar everything except certain directories.
 tar --exclude='./.buildozer' --exclude='./bin' -czvf ../youmacro.tgz .
+
+** To build and deploy on an android device.
+buildozer -v android debug deploy run logcat
+
+
+** To build release apk with signing.
+export P4A_RELEASE_KEYSTORE=~/keystores/raindrop.keystore
+export P4A_RELEASE_KEYSTORE_PASSWD=android
+export P4A_RELEASE_KEYALIAS_PASSWD=android
+export P4A_RELEASE_KEYALIAS=raindrop
+cd src/youmacro
+buildozer android release
+
+** To build the keys for signing. Note ONLY DO THIS ONCE.
+cd ~
+mkdir keystores
+keytool -genkey -v -keystore ./keystores/raindrop.keystore -alias raindrop -keyalg RSA -keysize 2048 -validity 10000
+
+

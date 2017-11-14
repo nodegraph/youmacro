@@ -17,10 +17,16 @@ from pythonwebview.webviewwrapper import WebViewWrapper
 from service.androidwrap import AndroidWrap
 from service.ydlwrap import YdlWrap
 
+# Ad Service Classes.
+PythonActivity=autoclass("org.renpy.android.PythonActivity")
+AdBuddiz=autoclass("com.purplebrain.adbuddiz.sdk.AdBuddiz")
 
+# WebView Classes.
 WebView = autoclass('android.webkit.WebView')
 WebViewClient = autoclass('android.webkit.WebViewClient')
 Intent = autoclass('android.content.Intent')
+
+# Our android activity.
 activity = autoclass('org.kivy.android.PythonActivity').mActivity
 
 #Config.set('kivy', 'window_icon', 'logo.png')
@@ -28,6 +34,7 @@ Config.set('kivy', 'exit_on_escape', 0)
 Config.set('kivy', 'pause_on_minimize', 0)
 
 service_port = 7186
+#app_port = 6829
 
 
 class MainScreen(Screen):
@@ -58,6 +65,15 @@ class YouMacroApp(App):
     def on_start(self):
         # Bind some event handlers.
         EventLoop.window.bind(on_key_down=self.handle_key_down)
+
+        # Start up ad service.
+        # AdBuddiz has a rule about multiple installations on same device.
+        # So put it in test mode when developing. This must come before setPublisherKey.
+        AdBuddiz.setTestModeActive()
+        AdBuddiz.setPublisherKey("TEST_PUBLISHER_KEY")
+
+        #AdBuddiz.setPublisherKey("e5ad34cb-e1e1-4fca-8f98-cc412b5d0fa6")
+        AdBuddiz.cacheAds(activity)
         return True
 
     def on_pause(self):
@@ -88,18 +104,20 @@ class YouMacroApp(App):
         service.start(activity, argument)
 
     def build(self):
-        # Set our icon.
-        #self.icon = 'logo.png'
-
         # Start our background service.
         self.start_service()
+
         # Initialize osc for communicating with the background service.
         # Note we only do one way communication from the main app to the service.
         osc.init()
-        #oscid = osc.listen(ipAddr='127.0.0.1', port=3001)
+        #oscid = osc.listen(ipAddr='127.0.0.1', port=app_port)
         #print('OOOOOOOOOOOOOOOOOOOOOOOO oscid is: %s' % oscid)
         #osc.bind(oscid, self.some_api_callback, '/download_url_found')
         #Clock.schedule_interval(lambda *x: osc.readQueue(oscid), 0)
+
+        # Sometimes the service seems to get killed.
+        # So we periodically (every 2 seconds) call start service to make sure the service is started.
+        Clock.schedule_interval(lambda dt: self.start_service(), 2)
 
         # Build our gui.
         self.load_kv('youmacro.kv')
@@ -172,6 +190,8 @@ class YouMacroApp(App):
         self.perform_forward_action()
 
     def on_download_pressed(self, pressed_obj):
+        # We currently on show ads on downloads.
+        AdBuddiz.showAd(activity)
         self.perform_download_action()
 
     def on_play_pressed(self, pressed_obj):
@@ -217,7 +237,7 @@ class YouMacroApp(App):
 
     @run_on_ui_thread
     def perform_play_action(self):
-        AndroidWrap.view_downloads()
+        AndroidWrap.view_downloads_by_favorite_app()
 
 
 
