@@ -28,7 +28,7 @@ source.include_exts = py,png,jpg,kv,atlas
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.2
+version = 0.1
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -36,7 +36,7 @@ version = 0.2
 
 # (list) Application requirements
 # comma seperated e.g. requirements = sqlite3,kivy
-requirements = android,openssl,youtube_dl,kivy
+requirements = android,openssl,youtube_dl,plyer,kivy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -52,7 +52,7 @@ presplash.filename = %(source.dir)s/logo_with_text_centered.png
 icon.filename = %(source.dir)s/logo.png
 
 # (str) Supported orientation (one of landscape, portrait or all)
-orientation = all
+orientation = portrait
 
 # (list) List of service to declare
 #services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY
@@ -159,7 +159,7 @@ android.add_src = javawebview/*.java
 #android.ouya.icon.filename = %(source.dir)s/data/ouya_icon.png
 
 # (str) XML file to include as an intent filters in <activity> tag
-#android.manifest.intent_filters =
+android.manifest.intent_filters = intentfilter.xml
 
 # (list) Android additionnal libraries to copy into libs/armeabi
 #android.add_libs_armeabi = libs/android/*.so

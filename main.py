@@ -10,15 +10,22 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.textinput import TextInput
 
+from android import activity
 from android.runnable import run_on_ui_thread
 from jnius import autoclass
+from jnius import cast
 
+# Our classes.
 from pythonwebview.webviewwrapper import WebViewWrapper
 from service.androidwrap import AndroidWrap
-from service.ydlwrap import YdlWrap
+from service.comms import Comms
+from service.config import Config as AppConfig
+
+JIntent = autoclass('android.content.Intent')
+JString = autoclass('java.lang.String')
+JUri = autoclass('android.net.Uri')
 
 # Ad Service Classes.
-PythonActivity=autoclass("org.renpy.android.PythonActivity")
 AdBuddiz=autoclass("com.purplebrain.adbuddiz.sdk.AdBuddiz")
 
 # WebView Classes.
@@ -27,14 +34,19 @@ WebViewClient = autoclass('android.webkit.WebViewClient')
 Intent = autoclass('android.content.Intent')
 
 # Our android activity.
-activity = autoclass('org.kivy.android.PythonActivity').mActivity
+PythonActivity=autoclass("org.kivy.android.PythonActivity")
+activity = PythonActivity.mActivity
 
-#Config.set('kivy', 'window_icon', 'logo.png')
+# Our service
+Service = autoclass('{}.Service{}'.format('com.youmacro.browser', 'Downloader'))
+Intent = autoclass('android.content.Intent')
+PendingIntent = autoclass('android.app.PendingIntent')
+AndroidString = autoclass('java.lang.String')
+NotificationBuilder = autoclass('android.app.Notification$Builder')
+
+
 Config.set('kivy', 'exit_on_escape', 0)
 Config.set('kivy', 'pause_on_minimize', 0)
-
-service_port = 7186
-#app_port = 6829
 
 
 class MainScreen(Screen):
@@ -62,17 +74,27 @@ class YouMacroApp(App):
         super(YouMacroApp, self).__init__(**kwargs)
         Clock.schedule_once(self._on_init_complete)
 
+        import android.activity
+        android.activity.bind(on_new_intent=self.on_new_intent)
+
     def on_start(self):
         # Bind some event handlers.
         EventLoop.window.bind(on_key_down=self.handle_key_down)
 
+        # Add this to manifest for AdBuddiz.
+        #<activity android:name = "com.purplebrain.adbuddiz.sdk.AdBuddizActivity"
+        #    android:theme = "@android:style/Theme.Translucent" />
+
         # Start up ad service.
         # AdBuddiz has a rule about multiple installations on same device.
         # So put it in test mode when developing. This must come before setPublisherKey.
-        AdBuddiz.setTestModeActive()
-        AdBuddiz.setPublisherKey("TEST_PUBLISHER_KEY")
+        if AppConfig.Debug:
+            AdBuddiz.setTestModeActive()
+            AdBuddiz.setPublisherKey("TEST_PUBLISHER_KEY")
+        else:
+            AdBuddiz.setPublisherKey("e5ad34cb-e1e1-4fca-8f98-cc412b5d0fa6")
 
-        #AdBuddiz.setPublisherKey("e5ad34cb-e1e1-4fca-8f98-cc412b5d0fa6")
+        # Cache some ads.
         AdBuddiz.cacheAds(activity)
         return True
 
@@ -92,16 +114,14 @@ class YouMacroApp(App):
         print('RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRr')
         print('RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRr')
         print('RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRr')
-        pass
 
     def some_api_callback(self, message, *args):
         print("got a message! %s" % message)
 
     @run_on_ui_thread
     def start_service(self):
-        service = autoclass('{}.Service{}'.format('com.youmacro.browser', 'Downloader'))
         argument = ''
-        service.start(activity, argument)
+        Service.start(activity, argument)
 
     def build(self):
         # Start our background service.
@@ -119,9 +139,29 @@ class YouMacroApp(App):
         # So we periodically (every 2 seconds) call start service to make sure the service is started.
         Clock.schedule_interval(lambda dt: self.start_service(), 2)
 
-        # Build our gui.
-        self.load_kv('youmacro.kv')
-        return MainScreen()
+
+
+    def on_new_intent(self, intent):
+        print('IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
+
+        # Check the intent for extra arguments.
+        extras = intent.getExtras()
+        if extras:
+            extra_name = JString(u'com.youmacro.browser.filepath'.encode('utf-16'),'utf-16')
+            #extra_jstr = extras.get(JIntent.EXTRA_STREAM)
+            #extra_jstr = extra_jstr.decode('utf16')
+            #uri = cast('android.net.Uri', extras.getParcelable(JIntent.EXTRA_STREAM))
+            #extra_jstr = uri.toString()
+            extra_jstr = extras.getShortArray(JIntent.EXTRA_STREAM)
+            print('extra: %s' % extra_jstr)
+            if extra_jstr:
+                print('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
+                intent = JIntent(JIntent.ACTION_VIEW)
+                type = JString('video/*'.encode('utf8'))
+                intent.setDataAndType(extra_jstr, type)
+                activity.startActivity(intent)
+        else:
+            print('nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn no extras')
 
     def _on_init_complete(self, *args):
         # Window.clearcolor = (0.1, 1, 0.1, 1)
@@ -199,7 +239,7 @@ class YouMacroApp(App):
 
     @run_on_ui_thread
     def perform_youmacro_action(self):
-        self.wv_wrap.loadUrl("https://www.youmacro.com")
+        self.wv_wrap.loadUrl("http://youmacro.com/topvideos/index.html")
 
     @run_on_ui_thread
     def perform_search_action(self):
@@ -224,20 +264,20 @@ class YouMacroApp(App):
     @run_on_ui_thread
     def perform_download_action(self):
         page_url = self.wv_wrap.getUrl()
-        osc.sendMsg('/extract_and_download', [page_url], port=service_port)
+        osc.sendMsg('/extract_and_download', [page_url], port=Comms.service_port)
 
     @staticmethod
     def debug_download_action(page_url):
         """This downloads on the main thread.
         It's purpose is to help debug YDL, as we get a good stack trace on the main thread."""
-        url = YdlWrap.extract_url(page_url)
+        #url = YdlWrap.get_media_url(page_url)
         print('dddddddddddddddddddddddddddddddddddddddddddddddddddddddddd')
         print('download_url: ' + url)
         print('dddddddddddddddddddddddddddddddddddddddddddddddddddddddddd')
 
     @run_on_ui_thread
     def perform_play_action(self):
-        AndroidWrap.view_downloads_by_favorite_app()
+        AndroidWrap.view_downloads()
 
 
 

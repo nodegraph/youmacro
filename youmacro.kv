@@ -4,74 +4,75 @@
     title: 'enter url'
     Label:
         text: 'content'
-<MainScreen>:
-    RootWidget:
-        orientation: 'vertical'
-        BoxLayout:
-            id: action_bar
-            size_hint: 1, 0.08
-            orientation: 'horizontal'
-            ActionButton:
-                id: youmacro_button
-                size_hint: 0.132857143, 1
-                background_color: [0,0,0,1]
-                text: 'hello'
-                on_press: self.background_color = [0.5,0.5,0.5,1]
-                on_release: self.background_color = [0,0,0,1]
-                icon: 'logo.png'
-            SearchBar:
-                size_hint: 0.01, 1
-            ActionButton:
-                id: search_button
-                size_hint: 0.142857143, 1
-                background_color: [0,0,0,1]
-                center_y: self.parent.center_y
-                on_press: self.background_color = [0.5,0.5,0.5,1]
-                on_release: self.background_color = [0,0,0,1]
-                icon: 'ic_search_white_48dp.png'
-            ActionButton:
-                id: refresh_button
-                size_hint: 0.142857143, 1
-                background_color: [0,0,0,1]
-                center_y: self.parent.center_y
-                on_press: self.background_color = [0.5,0.5,0.5,1]
-                on_release: self.background_color = [0,0,0,1]
-                icon: 'ic_refresh_white_48dp.png'
-            ActionButton:
-                id: back_button
-                size_hint: 0.142857143, 1
-                background_color: [0,0,0,1]
-                center_y: self.parent.center_y
-                on_press: self.background_color = [0.5,0.5,0.5,1]
-                on_release: self.background_color = [0,0,0,1]
-                icon: 'ic_navigate_before_white_48dp.png'
-            ActionButton:
-                id: forward_button
-                size_hint: 0.142857143, 1
-                background_color: [0,0,0,1]
-                center_y: self.parent.center_y
-                on_press: self.background_color = [0.5,0.5,0.5,1]
-                on_release: self.background_color = [0,0,0,1]
-                icon: 'ic_navigate_next_white_48dp.png'
-            ActionButton:
-                id: download_button
-                size_hint: 0.142857143, 1
-                background_color: [0,0,0,1]
-                center_y: self.parent.center_y
-                on_press: self.background_color = [0.5,0.5,0.5,1]
-                on_release: self.background_color = [0,0,0,1]
-                icon: 'ic_file_download_white_48dp.png'
-            ActionButton:
-                id: play_button
-                size_hint: 0.142857143, 1
-                background_color: [0,0,0,1]
-                center_y: self.parent.center_y
-                on_press: self.background_color = [0.5,0.5,0.5,1]
-                on_release: self.background_color = [0,0,0,1]
-                icon: 'ic_play_arrow_white_48dp.png'
+
+RootWidget:
+    orientation: 'vertical'
+    BoxLayout:
+        id: action_bar
+        size_hint: 1, 0.08
+        orientation: 'horizontal'
+        spacing: 0
+        ActionButton:
+            id: youmacro_button
+            size_hint: 0.132857143, 1
+            background_color: [0,0,0,1]
+            text: 'hello'
+            on_press: self.background_color = [0.5,0.5,0.5,1]
+            on_release: self.background_color = [0,0,0,1]
+            icon: 'logo.png'
+        SearchBar:
+            size_hint: 0.01, 1
+        ActionButton:
+            id: search_button
+            size_hint: 0.142857143, 1
+            background_color: [0,0,0,1]
+            center_y: self.parent.center_y
+            on_press: self.background_color = [0.5,0.5,0.5,1]
+            on_release: self.background_color = [0,0,0,1]
+            icon: 'ic_search_white_48dp.png'
+        ActionButton:
+            id: refresh_button
+            size_hint: 0.142857143, 1
+            background_color: [0,0,0,1]
+            center_y: self.parent.center_y
+            on_press: self.background_color = [0.5,0.5,0.5,1]
+            on_release: self.background_color = [0,0,0,1]
+            icon: 'ic_refresh_white_48dp.png'
+        ActionButton:
+            id: back_button
+            size_hint: 0.142857143, 1
+            background_color: [0,0,0,1]
+            center_y: self.parent.center_y
+            on_press: self.background_color = [0.5,0.5,0.5,1]
+            on_release: self.background_color = [0,0,0,1]
+            icon: 'ic_navigate_before_white_48dp.png'
+        ActionButton:
+            id: forward_button
+            size_hint: 0.142857143, 1
+            background_color: [0,0,0,1]
+            center_y: self.parent.center_y
+            on_press: self.background_color = [0.5,0.5,0.5,1]
+            on_release: self.background_color = [0,0,0,1]
+            icon: 'ic_navigate_next_white_48dp.png'
+        ActionButton:
+            id: download_button
+            size_hint: 0.142857143, 1
+            background_color: [0,0,0,1]
+            center_y: self.parent.center_y
+            on_press: self.background_color = [0.5,0.5,0.5,1]
+            on_release: self.background_color = [0,0,0,1]
+            icon: 'ic_file_download_white_48dp.png'
+        ActionButton:
+            id: play_button
+            size_hint: 0.142857143, 1
+            background_color: [0,0,0,1]
+            center_y: self.parent.center_y
+            on_press: self.background_color = [0.5,0.5,0.5,1]
+            on_release: self.background_color = [0,0,0,1]
+            icon: 'ic_play_arrow_white_48dp.png'
 
 
 
-        BoxLayout:
-            id: web_view_placeholder
-            size_hint: 1, 0.92
+    BoxLayout:
+        id: web_view_placeholder
+        size_hint: 1, 0.92

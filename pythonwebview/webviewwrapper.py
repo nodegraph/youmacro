@@ -72,17 +72,25 @@ class WebViewWrapper(Widget, EventDispatcher):
         if not self._web_view:
             return
 
+        print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
         # Set the top left corner.
         self._web_view.setX(0)
+        print('BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB')
         self._web_view.setY(Window.height * 0.08) #(self.action_bar.height)
+        print('CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC')
+
 
         # Set the layout params.
         lp = self._web_view.getLayoutParams()
+        print('DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
         lp.height = Window.height * 0.92
+        print('EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')
         lp.width = Window.width
+        print('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
 
         # Request another layout run.
         self._web_view.requestLayout()
+        print('GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG')
 
     @run_on_ui_thread
     def create_web_view(self):
@@ -98,10 +106,10 @@ class WebViewWrapper(Widget, EventDispatcher):
         # Setup the web view.
         settings = self._web_view.getSettings()
         settings.setJavaScriptEnabled(True)
-        #settings.setUseWideViewPort(True)  # enables viewport html meta tags
-        #settings.setLoadWithOverviewMode(True)  # uses viewport
-        #settings.setSupportZoom(True)  # enables zoom
-        #settings.setBuiltInZoomControls(True)  # enables zoom controls
+        settings.setUseWideViewPort(True)  # enables viewport html meta tags
+        settings.setLoadWithOverviewMode(True)  # uses viewport
+        settings.setSupportZoom(True)  # enables zoom
+        settings.setBuiltInZoomControls(True)  # enables zoom controls
 
         # Set the forwarding web view client.
         # This allows us to get events from the native web view.
